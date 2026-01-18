@@ -8,16 +8,17 @@ Built for **Winter of Code 5.0** under **Data Science, Web Development, and Open
 [![Winter of Code](https://img.shields.io/badge/Winter%20of%20Code-5.0-blueviolet)](https://winter-of-code.tech)
 
 ##                                                   🏅  ![Winter of Code 5.0 Contributor] : 🏅 
-<img width="140" height="120" alt="WoC 5 0 - Contributor Badge Black" src="https://github.com/user-attachments/assets/a788f274-b422-47f6-b21c-2353b593bae5" />
+<img width="140" height="120" alt="WoC 5 0 - Contributor Badge Black" src="https://github.com/user-attachments/assets/559a2c02-0826-49f1-8112-3a4ffa413c39" />
+
 
 ---
 
 ## ✨ Live Features
 
-🔥 **Live Impact Heatmaps** – ML‑predicted cold‑risk zones from real weather data
-🚚 **Predictive Logistics** – Frost‑Route Planner with **94% ETA confidence**
-⚡ **Energy Optimization** – Grid stress meter + **$14 weekly savings insight**
-👥 **Volunteering Matcher** – Skill‑to‑need mapping (**14 volunteers needed NOW**)
+🔥 **Live Impact Heatmaps** – ML‑predicted cold‑risk zones from real weather data                                                                                                                                  
+🚚 **Predictive Logistics** – Frost‑Route Planner with **94% ETA confidence**                                                                                                                                      
+⚡ **Energy Optimization** – Grid stress meter + **$14 weekly savings insight**                                                                                                                                    
+👥 **Volunteering Matcher** – Skill‑to‑need mapping (**14 volunteers needed NOW**)                        
 
 ---
 
@@ -63,43 +64,22 @@ vercel-compose up --build
 # 3. Access dashboard
 http://localhost:3000
 ```
-
----
-
-## 📁 Project Structure
-
-```text
-datafrost/
-├── frontend/
-│   └── datafrost-final.html     # Production UI (100% functional)
-├── backend/
-│   ├── python-api/              # ML Engine (FastAPI)
-│   │   ├── main.py
-│   │   ├── requirements.txt
-│   │   └── .env
-│   └── node-server/             # API Gateway (Node.js)
-│       ├── server.js
-│       ├── package.json
-│       └── .env
-└── README.md                     # Project documentation
-```
-
 ---
 
 ## 🎯 Winter of Code 5.0 Tracks
 
-✅ **Data Science & AI** – ML‑based impact prediction models
-✅ **Web Development** – Responsive glassmorphism dashboard
+✅ **Data Science & AI** – ML‑based impact prediction models                                                                                                                                                       
+✅ **Web Development** – Responsive glassmorphism dashboard                                                                                                                                                        
 ✅ **Open Innovation** – Modular seasonal crisis intelligence platform
 
 ---
 
 ## 📊 Real-Time Data Sources
 
-🌤️ **OpenWeatherMap API** → Live temperature & windchill
-🤖 **Scikit‑learn** → Impact score predictions
-🗄️ **MongoDB** → Volunteer & logistics data
-⚡ **Redis** → 5‑minute caching layer
+🌤️ **OpenWeatherMap API** → Live temperature & windchill                                                                                                                                                     
+🤖 **Scikit‑learn** → Impact score predictions                                                                                                                                                                  
+🗄️ **MongoDB** → Volunteer & logistics data                                                                                                                                                                      
+⚡ **Redis** → 5‑minute caching layer                                                                                                                                                                           
 
 ---
 
@@ -116,12 +96,12 @@ GET  http://localhost:8001/docs                         # FastAPI interactive do
 
 ## 🎨 UI Features
 
-✅ Glassmorphism "Frost" theme with backdrop blur
-✅ 5 separate pages with smooth transitions
-✅ Gmail‑only login (@gmail.com) + strong validation
-✅ Backend‑aware real‑time hooks
-✅ Mobile‑responsive + hover animations
-✅ Password rules: 8+ chars, 1 uppercase, 1 number, 1 special character
+✅ Glassmorphism "Frost" theme with backdrop blur                                                                                                                                                               
+✅ 5 separate pages with smooth transitions                                                                                                                                                                        
+✅ Gmail‑only login (@gmail.com) + strong validation                                                                                                                                                            
+✅ Backend‑aware real‑time hooks                                                                                                                                                                               
+✅ Mobile‑responsive + hover animations                                                                                                                                                                         
+✅ Password rules: 8+ chars, 1 uppercase, 1 number, 1 special character                                                                                                                                           
 
 ---
 
@@ -133,18 +113,6 @@ ETA Confidence      : 94%
 Grid Stress         : 82% (Near freezing)
 Volunteers Needed   : 14 (North Sector)
 Weekly Savings      : $14 (Thermostat optimization)
-```
-
----
-
-## 📈 Production Ready
-
-✅ Offline HTML demo works instantly
-✅ Backend integration via Docker
-✅ API documentation (/docs)
-✅ Environment configs (.env)
-✅ GitHub‑ready structure
-
 ---
 
 ## 🚀 Run Commands (Manual)
