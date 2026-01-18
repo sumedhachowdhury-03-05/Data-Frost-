@@ -32,13 +32,13 @@ FastAPI (Python ML Engine) · Node.js API Gateway
 MongoDB · Redis
 
 **Data & ML**
-Pandas · Scikit‑learn (Impact prediction models)
+Pandas (Impact prediction models)
 
 **APIs**
 OpenWeatherMap · Google Maps (ready)
 
 **Deployment**
-Docker Compose · Vercel
+ Vercel
 
 ---
 
@@ -58,7 +58,7 @@ Docker Compose · Vercel
 git clone <your-repo> && cd datafrost
 
 # 2. Start backend services
-docker-compose up --build
+vercel-compose up --build
 
 # 3. Access dashboard
 http://localhost:3000
@@ -81,8 +81,6 @@ datafrost/
 │       ├── server.js
 │       ├── package.json
 │       └── .env
-├── docker-compose.yml            # One-click deploy
-├── .env                          # Environment config
 └── README.md                     # Project documentation
 ```
 
@@ -146,7 +144,6 @@ Weekly Savings      : $14 (Thermostat optimization)
 ✅ API documentation (/docs)
 ✅ Environment configs (.env)
 ✅ GitHub‑ready structure
-✅ Winter of Code 5.0 submission ready
 
 ---
 
