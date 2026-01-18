@@ -8,7 +8,8 @@ Built for **Winter of Code 5.0** under **Data Science, Web Development, and Open
 [![Winter of Code](https://img.shields.io/badge/Winter%20of%20Code-5.0-blueviolet)](https://winter-of-code.tech)
 
 ##                                                   🏅  ![Winter of Code 5.0 Contributor] : 🏅 
-<img width="140" height="120" alt="WoC 5 0 - Contributor Badge Black" src="https://github.com/user-attachments/assets/559a2c02-0826-49f1-8112-3a4ffa413c39" />
+<img width="140" height="120" alt="WoC 5 0 - Contributor Badge Black" src="https://github.com/user-attachments/assets/bfddc720-8d7b-4a34-9d95-f7986b758fb5" />
+
 
 
 ---
