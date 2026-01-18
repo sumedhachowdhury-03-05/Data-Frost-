@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataFrost - Winter Intelligence Dashboard</title>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0f0f23 0%, #1e3a8a 50%, #1e293b 100%); 
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .glass { 
+            backdrop-filter: blur(20px); 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); 
+        }
+        .frost-glow { 
+            box-shadow: 0 25px 50px rgba(59, 130, 246, 0.3); 
+        }
+        .page-transition {
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .error-message {
+            color: #f87171;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .success-check {
+            color: #10b981;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="fixed inset-0 flex items-center justify-center p-8 z-50 page-transition">
+        <div class="glass p-12 rounded-3xl w-full max-w-md frost-glow">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-black bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text mb-4">
+                    Data<span class="text-blue-300">Frost</span>
+                </h1>
+                <p class="text-xl text-blue-200 font-light">Turning winter ideas into data-driven impact</p>
+            </div>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold mb-3 text-blue-100">Email</label>
+                    <input id="emailInput" type="email" required 
+                           class="glass w-full p-5 rounded-2xl text-lg focus:outline-none focus:ring-4 ring-blue-500/50 transition-all" 
+                           placeholder="name@gmail.com">
+                    <div id="emailError" class="error-message">❌ Email must end with @gmail.com</div>
+                    <div id="emailSuccess" class="success-check">✅ Valid Gmail address</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-3 text-blue-100">Password</label>
+                    <input id="passwordInput" type="password" required 
+                           class="glass w-full p-5 rounded-2xl text-lg focus:outline-none focus:ring-4 ring-blue-500/50 transition-all" 
+                           placeholder="Secure password required">
+                    <div id="passwordError" class="error-message">❌ Wrong password - must be 8+ letters with 1 uppercase, 1 number, 1 special character</div>
+                    <div id="passwordValidation" class="mt-2 text-xs space-y-1 hidden">
+                        <div class="flex items-center text-green-400"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>Min 8 characters</div>
+                        <div class="flex items-center text-green-400"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>1 Uppercase letter</div>
+                        <div class="flex items-center text-green-400"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>1 Number</div>
+                        <div class="flex items-center text-green-400"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>1 Special character</div>
+                    </div>
+                    <div id="passwordSuccess" class="success-check">✅ Strong password</div>
+                </div>
+                <button type="submit" id="loginBtn" disabled
+                        class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 p-5 rounded-2xl font-bold text-xl frost-glow transform hover:scale-105 transition-all duration-300">
+                    Enter Dashboard
+                </button>
+            </form>
+            <div class="mt-8 pt-8 border-t border-blue-500/30 text-center">
+                <button onclick="showExplore()" 
+                        class="text-blue-400 hover:text-white text-lg font-semibold underline transition-all">
+                    Explore Dashboard → (Demo)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN MENU PAGE -->
+    <div id="menuPage" class="hidden min-h-screen p-12">
+        <header class="glass rounded-3xl p-12 mb-20 frost-glow max-w-6xl mx-auto">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-8">
+                <div class="text-center lg:text-left">
+                    <h1 class="text-5xl font-black bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 mb-6">
+                        Winter Intelligence
+                    </h1>
+                    <p class="text-xl text-blue-200 font-light max-w-2xl">
+                        Choose your impact module - Data-driven decisions for winter challenges
+                    </p>
+                </div>
+                <button onclick="showLoginPage()" 
+                        class="px-8 py-4 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-2xl font-bold text-lg frost-glow transform hover:scale-105 transition-all">
+                    ← Back to Login
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
+            <div class="glass p-12 rounded-3xl cursor-pointer hover:scale-105 transition-all frost-glow group h-80 flex flex-col justify-center" onclick="showHeatmap()">
+                <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-3xl mb-8 flex items-center justify-center mx-auto group-hover:rotate-6 transition-all"></div>
+                <h3 class="text-4xl font-black mb-6 text-center bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text group-hover:scale-110 transition-all">Live Heatmap</h3>
+                <p class="text-xl text-blue-200 text-center font-light leading-relaxed">Impact-Forecast Heatmap<br>of community cold spots</p>
+            </div>
+            <div class="glass p-12 rounded-3xl cursor-pointer hover:scale-105 transition-all frost-glow group h-80 flex flex-col justify-center" onclick="showLogistics()">
+                <div class="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl mb-8 flex items-center justify-center mx-auto group-hover:rotate-6 transition-all"></div>
+                <h3 class="text-4xl font-black mb-6 text-center bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text group-hover:scale-110 transition-all">Predictive Logistics</h3>
+                <p class="text-xl text-blue-200 text-center font-light leading-relaxed">Frost-Route Planner<br>Smart resource delivery</p>
+            </div>
+            <div class="glass p-12 rounded-3xl cursor-pointer hover:scale-105 transition-all frost-glow group h-80 flex flex-col justify-center" onclick="showEnergy()">
+                <div class="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl mb-8 flex items-center justify-center mx-auto group-hover:rotate-6 transition-all"></div>
+                <h3 class="text-4xl font-black mb-6 text-center bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text group-hover:scale-110 transition-all">Energy Optimization</h3>
+                <p class="text-xl text-blue-200 text-center font-light leading-relaxed">Thermal Intelligence Hub<br>Save costs, stay warm</p>
+            </div>
+            <div class="glass p-12 rounded-3xl cursor-pointer hover:scale-105 transition-all frost-glow group h-80 flex flex-col justify-center" onclick="showVolunteering()">
+                <div class="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl mb-8 flex items-center justify-center mx-auto group-hover:rotate-6 transition-all"></div>
+                <h3 class="text-4xl font-black mb-6 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text group-hover:scale-110 transition-all">Volunteering Matcher</h3>
+                <p class="text-xl text-blue-200 text-center font-light leading-relaxed">Skill-to-Need<br>Maximum community impact</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEATMAP PAGE -->
+    <div id="heatmapPage" class="hidden min-h-screen p-12">
+        <div class="glass rounded-3xl p-16 max-w-7xl mx-auto frost-glow page-transition">
+            <div class="flex items-center justify-between mb-16">
+                <h2 class="text-5xl font-black bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">
+                    Live Impact-Forecast Heatmap
+                </h2>
+                <button onclick="showMenu()" class="px-8 py-4 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 rounded-2xl font-bold text-xl frost-glow transform hover:scale-105 transition-all">
+                    ← Back to Menu
+                </button>
+            </div>
+            <div id="riskHeatmap" class="h-[600px] rounded-3xl overflow-hidden border-4 border-blue-500/50 mb-16 shadow-2xl"></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass p-8 rounded-2xl border-2 border-red-500/40">
+                    <h4 class="text-2xl font-bold mb-4 text-red-400">🚨 High Risk Zones</h4>
+                    <div class="text-4xl font-black text-red-500 mb-2" data-risk-zones>17</div>
+                    <p class="text-blue-300">Predicted road closures</p>
+                </div>
+                <div class="glass p-8 rounded-2xl border-2 border-yellow-500/40">
+                    <h4 class="text-2xl font-bold mb-4 text-yellow-400">⚠️ Critical Needs</h4>
+                    <div class="text-4xl font-black text-yellow-500 mb-2">892 Units</div>
+                    <p class="text-blue-300">Heating assistance required</p>
+                </div>
+                <div class="glass p-8 rounded-2xl border-2 border-emerald-500/40">
+                    <h4 class="text-2xl font-bold mb-4 text-emerald-400">✅ Covered Areas</h4>
+                    <div class="text-4xl font-black text-emerald-500 mb-2">214</div>
+                    <p class="text-blue-300">Resources allocated</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGISTICS PAGE -->
+    <div id="logisticsPage" class="hidden min-h-screen p-12">
+        <div class="glass rounded-3xl p-16 max-w-7xl mx-auto frost-glow page-transition">
+            <div class="flex items-center justify-between mb-16">
+                <h2 class="text-5xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text">
+                    The Frost-Route Planner
+                </h2>
+                <button onclick="showMenu()" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl font-bold text-xl frost-glow transform hover:scale-105 transition-all">
+                    ← Back to Menu
+                </button>
+            </div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-16 mb-16">
+                <div>
+                    <h3 class="text-3xl font-bold mb-8 text-emerald-300">High-Risk Delivery Zones</h3>
+                    <div id="logisticsHeatmap" class="h-96 rounded-3xl overflow-hidden border-4 border-emerald-500/50"></div>
+                </div>
+                <div class="space-y-8">
+                    <div class="glass p-8 rounded-3xl border-2 border-emerald-500/40">
+                        <h3 class="text-2xl font-bold mb-6 text-emerald-400">ETA Confidence Score</h3>
+                        <div class="text-5xl font-black text-emerald-500 mb-4">94%</div>
+                        <div class="w-full bg-gray-800/50 rounded-full h-6">
+                            <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-6 rounded-full shadow-lg" style="width:94%"></div>
+                        </div>
+                        <p class="text-lg text-blue-300 mt-4">90% chance before blizzard impact</p>
+                    </div>
+                    <div class="glass p-8 rounded-3xl border-2 border-blue-500/40">
+                        <h3 class="text-2xl font-bold mb-6">Smart Rerouting</h3>
+                        <div class="grid grid-cols-2 gap-8 text-center">
+                            <div>
+                                <div class="text-3xl font-black text-gray-400 mb-2">2h 15m</div>
+                                <p class="text-blue-300 text-sm uppercase tracking-wide">Standard Route</p>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-black text-emerald-400 mb-2">1h 42m</div>
+                                <p class="text-emerald-300 text-sm uppercase tracking-wide font-bold">Data-Thawed ⚡</p>
+                                <div class="text-emerald-400 font-bold mt-2">+33m saved</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-3xl font-bold mb-12 text-center text-emerald-300">Supply Forecast - 72hr Cold Wave</h3>
+                <canvas id="supplyForecastChart" class="max-w-4xl mx-auto h-96"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ENERGY PAGE -->
+    <div id="energyPage" class="hidden min-h-screen p-12">
+        <div class="glass rounded-3xl p-16 max-w-7xl mx-auto frost-glow page-transition">
+            <div class="flex items-center justify-between mb-16">
+                <h2 class="text-5xl font-black bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text">
+                    Thermal Intelligence Hub
+                </h2>
+                <button onclick="showMenu()" class="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 rounded-2xl font-bold text-xl frost-glow transform hover:scale-105 transition-all">
+                    ← Back to Menu
+                </button>
+            </div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-16 mb-16">
+                <div>
+                    <h3 class="text-3xl font-bold mb-8 text-orange-300">Demand Prediction Curve</h3>
+                    <canvas id="demandPredictionChart" class="h-96 rounded-3xl border-4 border-orange-500/50"></canvas>
+                </div>
+                <div class="space-y-8">
+                    <div class="glass p-10 rounded-3xl border-4 border-red-500/40 bg-gradient-to-br from-red-500/10">
+                        <h3 class="text-2xl font-bold mb-6 text-red-400">🚨 Waste Detection</h3>
+                        <div class="text-4xl font-black text-red-500 mb-4">Building #47</div>
+                        <p class="text-xl text-red-300 mb-6">+38% over baseline</p>
+                        <div class="text-lg font-semibold text-orange-400 bg-orange-500/20 p-4 rounded-2xl">
+                            🔍 Suspected Heat Leak
+                        </div>
+                    </div>
+                    <div class="glass p-10 rounded-3xl border-4 border-orange-500/50">
+                        <h3 class="text-2xl font-bold mb-6 text-orange-400">Grid Stress Meter</h3>
+                        <div class="relative w-64 h-64 mx-auto" style="--stress: 82%;">
+                            <canvas id="gridStressGauge" width="256" height="256"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <div class="text-4xl font-black text-orange-400" data-grid-stress>82%</div>
+                                <div class="text-sm text-blue-300 uppercase tracking-wide">Near Freezing</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass p-12 rounded-3xl border-2 border-emerald-500/40">
+                <h3 class="text-3xl font-bold mb-8 text-emerald-400 text-center">💡 Cost-Saving Recommendations</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div class="glass p-8 rounded-2xl border-2 border-emerald-500/50 hover:scale-105 transition-all">
+                        <div class="text-2xl mb-4">🌡️ Thermostat</div>
+                        <div class="text-4xl font-black text-emerald-400 mb-4">-$14</div>
+                        <p class="text-lg text-blue-300">Lower 2°C (2-5AM) based on grid pricing</p>
+                    </div>
+                    <div class="glass p-8 rounded-2xl border-2 border-emerald-500/50 hover:scale-105 transition-all">
+                        <div class="text-2xl mb-4">⚡ Appliances</div>
+                        <div class="text-4xl font-black text-emerald-400 mb-4">-$9</div>
+                        <p class="text-lg text-blue-300">Shift laundry to 11AM-2PM off-peak</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VOLUNTEERING PAGE -->
+    <div id="volunteeringPage" class="hidden min-h-screen p-12">
+        <div class="glass rounded-3xl p-16 max-w-7xl mx-auto frost-glow page-transition">
+            <div class="flex items-center justify-between mb-16">
+                <h2 class="text-5xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
+                    Skill-to-Need Matcher
+                </h2>
+                <button onclick="showMenu()" class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 rounded-2xl font-bold text-xl frost-glow transform hover:scale-105 transition-all">
+                    ← Back to Menu
+                </button>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+                <div>
+                    <h3 class="text-3xl font-bold mb-12 text-purple-300">Live Impact Scoreboards</h3>
+                    <div class="space-y-6">
+                        <div class="glass p-8 rounded-3xl border-4 border-red-500/40 hover:scale-102 transition-all">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-2xl font-bold text-red-400">North Sector</h4>
+                                <div class="text-3xl font-black text-red-500 volunteers-needed">14 Needed</div>
+                            </div>
+                            <p class="text-xl text-blue-300 mb-6">Snow clearing - High urgency (3hr forecast)</p>
+                            <div class="w-full bg-gray-800/50 rounded-full h-6 overflow-hidden">
+                                <div class="bg-gradient-to-r from-red-500 to-orange-500 h-6 rounded-full shadow-lg animate-pulse" style="width:65%"></div>
+                            </div>
+                        </div>
+                        <div class="glass p-8 rounded-3xl border-4 border-yellow-500/40 hover:scale-102 transition-all">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-2xl font-bold text-yellow-400">East Clinics</h4>
+                                <div class="text-3xl font-black text-yellow-500">7 Needed</div>
+                            </div>
+                            <p class="text-xl text-blue-300 mb-6">Medical support - Medium priority</p>
+                            <div class="w-full bg-gray-800/50 rounded-full h-6 overflow-hidden">
+                                <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-6 rounded-full shadow-lg" style="width:42%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-8">
+                    <div class="glass p-8 rounded-3xl border-2 border-purple-500/50">
+                        <h3 class="text-2xl font-bold mb-6 text-purple-400">Filter by Skill</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button class="glass px-6 py-3 rounded-xl hover:bg-purple-500/30 transition-all font-semibold">Doctor</button>
+                            <button class="glass px-6 py-3 rounded-xl hover:bg-purple-500/30 transition-all font-semibold">Engineer</button>
+                            <button class="glass px-6 py-3 rounded-xl hover:bg-purple-500/30 transition-all font-semibold">Driver</button>
+                            <button class="glass px-6 py-3 rounded-xl hover:bg-purple-500/30 transition-all font-semibold">General</button>
+                        </div>
+                    </div>
+                    <div id="volunteerMap" class="h-80 rounded-3xl overflow-hidden border-4 border-pink-500/50"></div>
+                </div>
+            </div>
+            <div class="glass p-12 rounded-3xl border-4 border-emerald-500/50 text-center">
+                <h3 class="text-3xl font-bold mb-8 text-emerald-400">Your Community Impact Today</h3>
+                <div class="inline-block p-12 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-3xl border-4 border-emerald-500/50 shadow-2xl">
+                    <div class="text-6xl mb-6">🏆</div>
+                    <div class="text-5xl font-black text-emerald-400 mb-4">5 Families Heated</div>
+                    <div class="text-2xl text-emerald-300 font-semibold">Community Warmth Badge</div>
+                    <div class="mt-8 text-4xl animate-pulse">💚 +247 Warmth Points</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // BACKEND INTEGRATION READY - Real data hooks
+        let REAL_DATA = {};
+        
+        // Fetch real data from Node.js backend (runs when backend is active)
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch('http://localhost:3001/api/dashboard');
+                REAL_DATA = await response.json();
+                updateUIWithRealData();
+            } catch(e) {
+                console.log('Backend demo mode - using mock data');
+                // Mock data for demo
+                REAL_DATA = {
+                    impact_forecast: { predicted_needs: { delivery_zones: 17 } },
+                    energy_stats: { grid_stress: 0.82 }
+                };
+            }
+        }
+        
+        function updateUIWithRealData() {
+            // Update risk zones with real ML data
+            const riskZonesEl = document.querySelector('[data-risk-zones]');
+            if (riskZonesEl && REAL_DATA.impact_forecast) {
+                riskZonesEl.textContent = REAL_DATA.impact_forecast.predicted_needs?.delivery_zones || 17;
+            }
+            
+            // Update grid stress
+            const gridEl = document.querySelector('[data-grid-stress]');
+            if (gridEl && REAL_DATA.energy_stats) {
+                const stress = Math.round(REAL_DATA.energy_stats.grid_stress * 100);
+                gridEl.textContent = stress + '%';
+            }
+            
+            // Update volunteer needs
+            document.querySelectorAll('.volunteers-needed').forEach(el => {
+                el.textContent = REAL_DATA.volunteer_needs?.[0]?.volunteersNeeded || 14 + ' Needed';
+            });
+        }
+
+        // EMAIL VALIDATION - Must end with @gmail.com
+        const emailInput = document.getElementById('emailInput');
+        const emailError = document.getElementById('emailError');
+        const emailSuccess = document.getElementById('emailSuccess');
+        
+        emailInput.addEventListener('input', function() {
+            const email = this.value.trim();
+            const isGmail = email.toLowerCase().endsWith('@gmail.com');
+            
+            emailError.style.display = isGmail ? 'none' : 'block';
+            emailSuccess.style.display = isGmail ? 'block' : 'none';
+        });
+
+        // PASSWORD VALIDATION - 8+ chars, 1 upper, 1 number, 1 special
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordError = document.getElementById('passwordError');
+        const loginBtn = document.getElementById('loginBtn');
+        const passwordValidation = document.getElementById('passwordValidation');
+        const passwordSuccess = document.getElementById('passwordSuccess');
+
+        function validatePassword(password) {
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasNumber = /\d/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            
+            return {
+                valid: hasLength && hasUpper && hasNumber && hasSpecial,
+                hasLength, hasUpper, hasNumber, hasSpecial
+            };
+        }
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const validation = validatePassword(password);
+            
+            // Show validation checklist
+            passwordValidation.classList.toggle('hidden', !password);
+            if (!password) {
+                passwordError.style.display = 'none';
+                passwordSuccess.style.display = 'none';
+                loginBtn.disabled = true;
+                return;
+            }
+            
+            // Show error or success
+            if (validation.valid) {
+                passwordError.style.display = 'none';
+                passwordSuccess.style.display = 'block';
+            } else {
+                passwordError.style.display = 'block';
+                passwordSuccess.style.display = 'none';
+            }
+            
+            loginBtn.disabled = !validation.valid;
+            
+            // Update checklist visuals
+            document.querySelectorAll('#passwordValidation > div').forEach((div, index) => {
+                const checks = [validation.hasLength, validation.hasUpper, validation.hasNumber, validation.hasSpecial];
+                div.classList.toggle('text-green-400', checks[index]);
+                div.classList.toggle('text-gray-500', !checks[index]);
+            });
+        });
+
+        // Login handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Final validation
+            if (!email.toLowerCase().endsWith('@gmail.com')) {
+                emailError.style.display = 'block';
+                emailSuccess.style.display = 'none';
+                return;
+            }
+            
+            const pwValid = validatePassword(password);
+            if (!pwValid.valid) {
+                passwordError.style.display = 'block';
+                return;
+            }
+            
+            // Success - go to menu
+            showMenu();
+            fetchDashboardData(); // Load real data
+        });
+
+        // Navigation functions
+        function showExplore() {
+            document.getElementById('loginPage').classList.add('hidden');
+            showMenu();
+            fetchDashboardData();
+        }
+
+        function showLoginPage() {
+            hideAllPages();
+            document.getElementById('loginPage').classList.remove('hidden');
+        }
+
+        function showMenu() {
+            hideAllPages();
+            document.getElementById('menuPage').classList.remove('hidden');
+        }
+
+        function showHeatmap() {
+            hideAllPages();
+            document.getElementById('heatmapPage').classList.remove('hidden');
+            setTimeout(() => {
+                initHeatmap('riskHeatmap');
+                fetchDashboardData();
+            }, 100);
+        }
+
+        function showLogistics() {
+            hideAllPages();
+            document.getElementById('logisticsPage').classList.remove('hidden');
+            setTimeout(() => {
+                initHeatmap('logisticsHeatmap');
+                initSupplyChart();
+                fetchDashboardData();
+            }, 100);
+        }
+
+        function showEnergy() {
+            hideAllPages();
+            document.getElementById('energyPage').classList.remove('hidden');
+            setTimeout(() => {
+                initDemandChart();
+                initGridGauge();
+                fetchDashboardData();
+            }, 100);
+        }
+
+        function showVolunteering() {
+            hideAllPages();
+            document.getElementById('volunteeringPage').classList.remove('hidden');
+            setTimeout(() => {
+                initVolunteerMap();
+                fetchDashboardData();
+            }, 100);
+        }
+
+        function hideAllPages() {
+            document.querySelectorAll('div[id$="Page"]').forEach(page => {
+                page.classList.add('hidden');
+            });
+        }
+
+        // Charts & Maps (unchanged from previous version)
+        const heatPointsMain = [[40.7128, -74.0060, 0.9], [34.0522, -118.2437, 0.7], [41.8781, -87.6298, 0.95]];
+        const heatPointsLogistics = [[40.7128, -74.0060, 0.8], [40.7589, -73.9851, 0.6], [41.8781, -87.6298, 0.85]];
+
+        function initHeatmap(containerId) {
+            const map = L.map(containerId).setView([39, -98], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            const points = containerId === 'logisticsHeatmap' ? heatPointsLogistics : heatPointsMain;
+            L.heatLayer(points, {
+                radius: 50,
+                blur: 25,
+                maxZoom: 13,
+                gradient: {0.3: '#00f5ff', 0.6: '#ffaa00', 1: '#ff4444'}
+            }).addTo(map);
+        }
+
+        function initSupplyChart() {
+            new Chart(document.getElementById('supplyForecastChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Shelter A', 'Shelter B', 'Shelter C', 'Shelter D', 'Shelter E'],
+                    datasets: [{
+                        label: 'Depletion %',
+                        data: [78, 92, 65, 88, 71],
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderRadius: 12,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, max: 100 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initDemandChart() {
+            new Chart(document.getElementById('demandPredictionChart'), {
+                type: 'line',
+                data: {
+                    labels: ['20:00', '21:00', '22:00', '23:00', '00:00', '01:00', '02:00', '03:00'],
+                    datasets: [{
+                        label: 'Standard',
+                        data: [120, 140, 160, 180, 200, 190, 170, 150],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Predicted Surge',
+                        data: [120, 155, 195, 260, 340, 310, 265, 220],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, interaction: { intersect: false } }
+            });
+        }
+
+        function initGridGauge() {
+            const canvas = document.getElementById('gridStressGauge');
+            const ctx = canvas.getContext('2d');
+            const centerX = 128, centerY = 128, radius = 100;
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, Math.PI * 0.8, Math.PI * 1.2);
+            ctx.lineWidth = 25;
+            ctx.strokeStyle = '#374151';
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, Math.PI * 0.8, Math.PI * 0.95);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.fill();
+        }
+
+        function initVolunteerMap() {
+            const map = L.map('volunteerMap').setView([40.7128, -74.0060], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            
+            const volunteerGroups = [
+                { coords: [40.7589, -73.9851], count: 8, color: 'purple' },
+                { coords: [40.6782, -73.9442], count: 5, color: 'pink' },
+                { coords: [40.7505, -73.9934], count: 12, color: 'indigo' }
+            ];
+            
+            volunteerGroups.forEach(group => {
+                L.circleMarker(group.coords, {
+                    radius: group.count / 2 + 10,
+                    fillColor: group.color,
+                    color: '#fff',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.7
+                }).addTo(map).bindPopup(`<b>${group.count}</b> volunteers clustered`);
+            });
+        }
+    </script>
+</body>
+</html>
